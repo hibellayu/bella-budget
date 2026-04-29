@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="貝拉宇宙訂單"/>
+<title>貝拉的宇宙訂單</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;padding:0;font-family:'Georgia','Noto Serif TC',serif;background:linear-gradient(160deg,#F5EFE6 0%,#EDE0D0 40%,#E8D5C0 100%);min-height:100vh;color:#3D2E1E;padding-bottom:90px;}
+  button{font-family:inherit;cursor:pointer;}
+  input,select,textarea{font-family:inherit;}
+  .header{background:linear-gradient(135deg,#8B6914 0%,#A0805A 100%);padding:28px 18px 20px;color:#FFF8EE;position:relative;overflow:hidden;}
+  .circle{position:absolute;border-radius:50%;background:rgba(255,255,255,0.05);}
+  .sub{font-size:11px;opacity:.7;letter-spacing:3px;margin-bottom:4px;}
+  .title{font-size:24px;font-weight:bold;letter-spacing:.5px;}
+  .subtitle{font-size:12px;opacity:.65;margin-top:2px;}
+  .cards{margin-top:18px;display:flex;gap:10px;}
+  .hcard{flex:1;border-radius:12px;padding:10px 12px;background:rgba(255,255,255,0.15);}
+  .hcard.danger{background:rgba(180,60,60,0.35);}
+  .hcard.warn{background:rgba(180,130,40,0.35);}
+  .hlabel{font-size:10px;opacity:.8;margin-bottom:2px;}
+  .hval{font-size:14px;font-weight:bold;}
+  .prog-wrap{margin-top:14px;}
+  .prog-info{display:flex;justify-content:space-between;font-size:10px;opacity:.7;margin-bottom:5px;}
+  .prog-bg{height:7px;background:rgba(255,255,255,0.2);border-radius:99px;}
+  .prog-fill{height:100%;border-radius:99px;transition:width .5s ease;}
+  .tabs{display:flex;background:#EDE0D0;border-bottom:2px solid #D4C4B0;position:sticky;top:0;z-index:10;}
+  .tab-btn{flex:1;padding:12px 4px;border:none;background:transparent;color:#8B7355;font-size:12px;font-family:inherit;border-bottom:2px solid transparent;transition:all .15s;}
+  .tab-btn.active{background:#F5EFE6;color:#8B6914;font-weight:bold;border-bottom:2px solid #8B6914;}
+  .content{padding:16px 16px 0;}
+  .sec-title{font-size:13px;font-weight:bold;color:#8B6914;letter-spacing:1px;margin-bottom:10px;margin-top:4px;}
+  .card{background:#FAF5EE;border:1px solid #E0CDB8;border-radius:14px;padding:14px 16px;margin-bottom:12px;}
+  .row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #EDE0D0;font-size:13px;}
+  .row:last-child{border-bottom:none;}
+  .item-row{display:flex;align-items:center;gap:10px;border-radius:14px;padding:12px 14px;margin-bottom:10px;}
+  .check-btn{width:28px;height:28px;border-radius:50%;border:none;color:white;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;}
+  .item-icon{font-size:20px;}
+  .item-body{flex:1;min-width:0;}
+  .item-name{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cat-badge{color:white;border-radius:5px;padding:1px 6px;font-size:10px;}
+  .item-amt{font-weight:bold;font-size:14px;flex-shrink:0;}
+  .icon-btn{background:none;border:none;font-size:15px;padding:2px;flex-shrink:0;opacity:.8;}
+  .form-box{background:#FFF8EE;border:1px dashed #C8A87A;border-radius:14px;padding:16px;margin-bottom:10px;}
+  .icon-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+  .icon-opt{font-size:18px;width:34px;height:34px;border-radius:8px;border:1.5px solid #E0CDB8;background:transparent;}
+  .icon-opt.sel{background:#EDD9A3;border-color:#8B6914;}
+  .field{width:100%;border:1px solid #D4C4B0;border-radius:8px;padding:10px 12px;background:#FAF5EE;font-size:14px;color:#3D2E1E;outline:none;margin-bottom:0;}
+  .btn-row{display:flex;gap:8px;margin-top:12px;}
+  .btn{flex:1;border:none;border-radius:8px;padding:10px 0;font-size:14px;font-weight:bold;}
+  .btn-gold{background:#8B6914;color:#FFF8EE;}
+  .btn-gray{background:#A09080;color:#F5EFE6;}
+  .btn-red{background:#CC4444;color:#FFF0F0;}
+  .del-confirm{background:#FFF0F0;border:1px solid #FFAAAA;border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:13px;}
+  .add-btn{width:100%;border:2px dashed #C8A87A;background:transparent;border-radius:14px;padding:14px;color:#8B6914;font-size:14px;margin-bottom:10px;}
+  .sum-bar{background:#F5EFE6;border:1px solid #D4C4B0;border-radius:12px;padding:12px 16px;margin-top:4px;}
+  .note-card-filled{background:#3D2414;border:1px solid #5A3A20;border-radius:14px;padding:13px 14px;margin-bottom:10px;}
+  .note-time{font-size:11px;color:#C8A87A;background:rgba(255,255,255,0.12);border-radius:6px;padding:2px 8px;display:inline-block;}
+  .note-text{font-size:14px;line-height:1.8;color:#FFF3E0;white-space:pre-wrap;word-break:break-word;margin-top:8px;}
+  .note-del-btn{background:none;border:none;font-size:14px;color:#E8A090;padding:0 2px;opacity:.8;}
+  .tip-row{background:#FAF5EE;border:1px solid #E0CDB8;border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:13px;display:flex;gap:8px;}
+  .budget-edit-input{width:100%;background:rgba(255,255,255,0.3);border:1px solid rgba(255,255,255,0.5);border-radius:6px;padding:4px 6px;color:#FFF8EE;font-size:13px;outline:none;}
+  .budget-mini-btn{flex:1;background:rgba(255,255,255,0.25);border:none;border-radius:6px;color:#FFF8EE;font-size:11px;padding:4px 0;}
+  .bar-bg{height:6px;background:#E8D5C0;border-radius:99px;margin-top:4px;}
+  .bar-fill{height:100%;border-radius:99px;}
+  .warn-banner{background:#FFF0F0;border:1px solid #FFAAAA;border-radius:12px;padding:12px 16px;font-size:13px;color:#CC2222;margin-top:12px;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const LS_KEY='bella_budget_v2';
+function loadData(){try{return JSON.parse(localStorage.getItem(LS_KEY))||{};}catch(e){return{};}}
+function saveData(d){try{localStorage.setItem(LS_KEY,JSON.stringify(d));}catch(e){}}
+const DEF_FIXED=[
+  {id:'f1',name:'國泰世華信用卡費',amount:20000,category:'必要',icon:'💳',paid:false},
+  {id:'f2',name:'中信卡費',amount:20000,category:'必要',icon:'💳',paid:false},
+  {id:'f3',name:'學開車教練費',amount:11000,category:'必要',icon:'🚗',paid:false},
+  {id:'f4',name:'數位電視',amount:12000,category:'必要',icon:'📺',paid:false},
+];
+const DEF_OPT=[
+  {id:'o1',name:'投資 0050',amount:6000,category:'投資',icon:'📈',included:false},
+  {id:'o2',name:'投資 00850',amount:10000,category:'投資',icon:'📈',included:false},
+  {id:'o3',name:'投資 6274',amount:6000,category:'投資',icon:'📈',included:false},
+  {id:'o4',name:'切除副乳',amount:40000,category:'健康',icon:'🏥',included:false},
+  {id:'o5',name:'健身教練 12堂課',amount:21600,category:'健康',icon:'💪',included:false},
+  {id:'o6',name:'網球拍',amount:7200,category:'興趣',icon:'🎾',included:false},
+];
+const CAT_COLOR={必要:'#8B7355',投資:'#6B8F71',健康:'#9B7E6E',興趣:'#7B8FA1',其他:'#A0927A'};
+const ICONS=['💳','🚗','📺','📈','🏥','💪','🎾','🛍️','✈️','🍽️','📚','💄','🏠','💊','✨','🎓','🖥️','🎯'];
+const CATS=['必要','投資','健康','興趣','其他'];
+const TIPS=['先繳清固定費用，再考慮額外支出','投資與健康支出 > 娛樂消費','超過 1 萬的消費，等 48 小時再決定','每週回顧一次預算，避免不自覺超支','轉職期間，現金流 = 安全感'];
+function fmt(n){return'NT$ '+Number(n).toLocaleString('zh-TW');}
+function uid(){return'i'+Date.now()+Math.random().toString(36).slice(2,5);}
+function nowStr(){const d=new Date();return`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
+function h(tag,attrs,...children){
+  const el=document.createElement(tag);
+  if(attrs)Object.entries(attrs).forEach(([k,v])=>{
+    if(k==='style'&&typeof v==='object')Object.assign(el.style,v);
+    else if(k.startsWith('on'))el.addEventListener(k.slice(2).toLowerCase(),v);
+    else if(k==='className')el.className=v;
+    else el.setAttribute(k,v);
+  });
+  children.flat().forEach(c=>{if(c==null||c===false)return;el.appendChild(typeof c==='string'?document.createTextNode(c):c);});
+  return el;
+}
+const stored=loadData();
+let state={
+  budget:stored.budget??440000,
+  fixed:stored.fixed??JSON.parse(JSON.stringify(DEF_FIXED)),
+  optional:stored.optional??JSON.parse(JSON.stringify(DEF_OPT)),
+  notes:stored.notes??[],
+  tab:'overview',editingBudget:false,budgetInput:'',noteInput:'',fui:null,oui:null,delNote:null,
+};
+function persist(){saveData({budget:state.budget,fixed:state.fixed,optional:state.optional,notes:state.notes});}
+function render(){const app=document.getElementById('app');app.innerHTML='';app.appendChild(buildApp());}
+
+function buildApp(){
+  const{budget,fixed,optional,tab}=state;
+  const fixedTotal=fixed.reduce((s,i)=>s+i.amount,0);
+  const optTotal=optional.filter(i=>i.included).reduce((s,i)=>s+i.amount,0);
+  const paidTotal=fixed.filter(i=>i.paid).reduce((s,i)=>s+i.amount,0);
+  const committed=fixedTotal+optTotal;
+  const remaining=budget-committed;
+  const pct=Math.min((committed/budget)*100,100);
+  const danger=remaining<20000,warn=remaining<50000;
+  const wrap=h('div',{});
+  // Header
+  const hdr=h('div',{className:'header'});
+  hdr.appendChild(h('div',{className:'circle',style:{top:'-20px',right:'-20px',width:'120px',height:'120px'}}));
+  hdr.appendChild(h('div',{className:'circle',style:{bottom:'-30px',left:'-10px',width:'80px',height:'80px'}}));
+  hdr.appendChild(h('div',{className:'sub'},"BELLA'S FUND"));
+  hdr.appendChild(h('div',{className:'title'},'貝拉的宇宙訂單'));
+  hdr.appendChild(h('div',{className:'subtitle'},'2026.5月 · 重啟計劃'));
+  // Budget cards
+  const cards=h('div',{className:'cards'});
+  const bc=h('div',{className:'hcard'});
+  bc.appendChild(h('div',{className:'hlabel'},'總資金'));
+  if(state.editingBudget){
+    const inp=h('input',{type:'number',className:'budget-edit-input',value:state.budgetInput});
+    inp.addEventListener('input',e=>{state.budgetInput=e.target.value;});
+    bc.appendChild(inp);
+    const br=h('div',{style:{display:'flex',gap:'4px',marginTop:'6px'}});
+    br.appendChild(h('button',{className:'budget-mini-btn',onClick:()=>{const v=parseInt(state.budgetInput);if(v>0){state.budget=v;persist();}state.editingBudget=false;render();}},'✓'));
+    br.appendChild(h('button',{className:'budget-mini-btn',style:{background:'rgba(255,255,255,0.12)'},onClick:()=>{state.editingBudget=false;render();}},'✕'));
+    bc.appendChild(br);setTimeout(()=>inp.focus(),50);
+  }else{
+    const vr=h('div',{style:{display:'flex',alignItems:'center',gap:'6px'}});
+    vr.appendChild(h('div',{className:'hval'},fmt(budget)));
+    vr.appendChild(h('button',{style:{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'5px',color:'#FFF8EE',fontSize:'11px',padding:'2px 6px'},onClick:()=>{state.editingBudget=true;state.budgetInput=String(budget);render();}},'✏️'));
+    bc.appendChild(vr);
+  }
+  cards.appendChild(bc);
+  const bc2=h('div',{className:'hcard'});bc2.appendChild(h('div',{className:'hlabel'},'已規劃'));bc2.appendChild(h('div',{className:'hval'},fmt(committed)));cards.appendChild(bc2);
+  const bc3=h('div',{className:'hcard'+(danger?' danger':warn?' warn':'')});bc3.appendChild(h('div',{className:'hlabel'},'剩餘'));bc3.appendChild(h('div',{className:'hval'},fmt(remaining)));cards.appendChild(bc3);
+  hdr.appendChild(cards);
+  // Progress
+  const pw=h('div',{className:'prog-wrap'});
+  const pi=h('div',{className:'prog-info'});pi.appendChild(h('span',{},'支出比例'));pi.appendChild(h('span',{},pct.toFixed(1)+'%'));pw.appendChild(pi);
+  const pbg=h('div',{className:'prog-bg'});pbg.appendChild(h('div',{className:'prog-fill',style:{width:pct+'%',background:danger?'#FF6B6B':pct>70?'#F0C060':'#A8D5A2'}}));pw.appendChild(pbg);
+  hdr.appendChild(pw);wrap.appendChild(hdr);
+  // Tabs
+  const tabsDiv=h('div',{className:'tabs'});
+  [['overview','總覽'],['fixed','必要支出'],['optional','額外規劃'],['note','備忘']].forEach(([k,l])=>{
+    tabsDiv.appendChild(h('button',{className:'tab-btn'+(tab===k?' active':''),onClick:()=>{state.tab=k;state.fui=null;state.oui=null;render();}},l));
+  });
+  wrap.appendChild(tabsDiv);
+  const ct=h('div',{className:'content'});
+  if(tab==='overview')ct.appendChild(buildOverview(fixedTotal,optTotal,paidTotal,committed,remaining,budget));
+  if(tab==='fixed')ct.appendChild(buildFixed(fixedTotal));
+  if(tab==='optional')ct.appendChild(buildOptional(optTotal,remaining));
+  if(tab==='note')ct.appendChild(buildNote());
+  wrap.appendChild(ct);return wrap;
+}
+
+function buildOverview(fixedTotal,optTotal,paidTotal,committed,remaining,budget){
+  const{optional}=state;const div=h('div',{});
+  div.appendChild(sT('💰 資金分配一覽'));
+  const c1=h('div',{className:'card'});
+  c1.appendChild(rw('必要支出（5月）',fmt(fixedTotal),'#8B7355',true));
+  c1.appendChild(rw('　已付清',fmt(paidTotal),'#6B8F71'));
+  c1.appendChild(rw('　待繳納',fmt(fixedTotal-paidTotal),'#9B7E6E'));
+  div.appendChild(c1);
+  const c2=h('div',{className:'card'});
+  c2.appendChild(rw('額外規劃（已選）',fmt(optTotal),'#8B7355',true));
+  const sel=optional.filter(i=>i.included);
+  if(!sel.length)c2.appendChild(h('div',{style:{fontSize:'12px',color:'#A09080',padding:'4px 0'}},'尚未選取任何額外支出'));
+  else sel.forEach(i=>c2.appendChild(rw('　'+i.icon+' '+i.name,fmt(i.amount),CAT_COLOR[i.category]||'#8B7355')));
+  div.appendChild(c2);
+  const c3=h('div',{className:'card',style:{background:remaining<0?'#FFF0F0':'#F0F7F0',border:'1px solid '+(remaining<0?'#FFCCC0':'#C0DFC0')}});
+  c3.appendChild(rw('💼 總規劃支出',fmt(committed),'#3D2E1E',true));
+  c3.appendChild(rw('🏦 剩餘未規劃',fmt(remaining),remaining<0?'#CC3333':'#2E7D32',true));
+  div.appendChild(c3);
+  if(remaining<20000)div.appendChild(h('div',{className:'warn-banner'},'⚠️ 剩餘資金低於 2 萬，建議重新檢視支出。'));
+  div.appendChild(sT('📊 支出分類',{marginTop:'20px'}));
+  const cats=optional.filter(i=>i.included).reduce((acc,i)=>{acc[i.category]=(acc[i.category]||0)+i.amount;return acc;},{必要:fixedTotal});
+  Object.entries(cats).forEach(([cat,amt])=>{
+    const bw=h('div',{style:{marginBottom:'8px'}});
+    const bl=h('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'13px',marginBottom:'4px'}});
+    bl.appendChild(h('span',{style:{color:CAT_COLOR[cat]||'#8B7355'}},'■ '+cat));
+    bl.appendChild(h('span',{style:{fontWeight:'bold'}},fmt(amt)));
+    bw.appendChild(bl);
+    const bg=h('div',{className:'bar-bg'});bg.appendChild(h('div',{className:'bar-fill',style:{width:Math.min((amt/budget)*100,100)+'%',background:CAT_COLOR[cat]||'#8B7355'}}));
+    bw.appendChild(bg);div.appendChild(bw);
+  });
+  return div;
+}
+
+function buildFixed(fixedTotal){
+  const{fixed,fui}=state;const div=h('div',{});
+  div.appendChild(sT('📋 五月必要支出'));
+  div.appendChild(h('div',{style:{fontSize:'12px',color:'#A09080',marginBottom:'12px'}},'點 ✓ 已付清 ／ ✏️ 修改 ／ 🗑 刪除'));
+  fixed.forEach(item=>{
+    const editing=fui?.id===item.id&&fui?.mode==='edit';
+    const deling=fui?.id===item.id&&fui?.mode==='delete';
+    if(editing)div.appendChild(buildItemForm(item,data=>{state.fixed=state.fixed.map(i=>i.id===item.id?{...i,...data}:i);state.fui=null;persist();render();},()=>{state.fui=null;render();}));
+    else if(deling)div.appendChild(buildDelConfirm(item.name,()=>{state.fixed=state.fixed.filter(i=>i.id!==item.id);state.fui=null;persist();render();},()=>{state.fui=null;render();}));
+    else div.appendChild(buildItemRow(item,true));
+  });
+  if(fui?.mode==='add'&&!fui?.id)div.appendChild(buildItemForm(null,data=>{state.fixed.push({id:uid(),...data,paid:false});state.fui=null;persist();render();},()=>{state.fui=null;render();}));
+  else div.appendChild(h('button',{className:'add-btn',onClick:()=>{state.fui={mode:'add'};render();}},'＋ 新增必要支出'));
+  const sb=h('div',{className:'sum-bar',style:{display:'flex',justifyContent:'space-between'}});
+  sb.appendChild(h('span',{},'必要支出小計'));sb.appendChild(h('span',{style:{fontWeight:'bold',color:'#8B6914'}},fmt(fixedTotal)));
+  div.appendChild(sb);return div;
+}
+
+function buildOptional(optTotal,remaining){
+  const{optional,oui}=state;const div=h('div',{});
+  div.appendChild(sT('✨ 額外規劃支出'));
+  const hint=h('div',{style:{fontSize:'12px',color:'#A09080',marginBottom:'12px'}});
+  hint.appendChild(document.createTextNode('點 ✓ 納入預算 ／ ✏️ 修改 ／ 🗑 刪除 · 剩餘 '));
+  hint.appendChild(h('strong',{style:{color:remaining<30000?'#CC3333':'#2E7D32'}},fmt(remaining)));
+  div.appendChild(hint);
+  optional.forEach(item=>{
+    const editing=oui?.id===item.id&&oui?.mode==='edit';
+    const deling=oui?.id===item.id&&oui?.mode==='delete';
+    if(editing)div.appendChild(buildItemForm(item,data=>{state.optional=state.optional.map(i=>i.id===item.id?{...i,...data}:i);state.oui=null;persist();render();},()=>{state.oui=null;render();}));
+    else if(deling)div.appendChild(buildDelConfirm(item.name,()=>{state.optional=state.optional.filter(i=>i.id!==item.id);state.oui=null;persist();render();},()=>{state.oui=null;render();}));
+    else div.appendChild(buildItemRow(item,false));
+  });
+  if(oui?.mode==='add'&&!oui?.id)div.appendChild(buildItemForm(null,data=>{state.optional.push({id:uid(),...data,included:false});state.oui=null;persist();render();},()=>{state.oui=null;render();}));
+  else div.appendChild(h('button',{className:'add-btn',onClick:()=>{state.oui={mode:'add'};render();}},'＋ 新增額外項目'));
+  const sb=h('div',{className:'sum-bar'});
+  const r1=h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:'6px'}});
+  r1.appendChild(h('span',{},'額外支出小計（已選）'));r1.appendChild(h('span',{style:{fontWeight:'bold',color:'#8B6914'}},fmt(optTotal)));sb.appendChild(r1);
+  const r2=h('div',{style:{display:'flex',justifyContent:'space-between'}});
+  r2.appendChild(h('span',{style:{fontWeight:'bold'}},'規劃後剩餘'));r2.appendChild(h('span',{style:{fontWeight:'bold',fontSize:'16px',color:remaining<0?'#CC3333':'#2E7D32'}},fmt(remaining)));sb.appendChild(r2);
+  div.appendChild(sb);return div;
+}
+
+function buildNote(){
+  const{notes,noteInput,delNote}=state;const div=h('div',{});
+  div.appendChild(sT('📝 新增備忘'));
+  const inputBox=h('div',{style:{background:'#FAF5EE',border:'1px solid #D4C4B0',borderRadius:'14px',padding:'14px',marginBottom:'16px'}});
+  const ta=h('textarea',{placeholder:'例如：\n・副乳手術先詢問3間診所報價\n・0050等市場回檔再進場\n・健身教練先試上2堂再決定'});
+  Object.assign(ta.style,{width:'100%',minHeight:'110px',border:'1px solid #E0CDB8',borderRadius:'10px',padding:'12px',background:'#FFF8EE',fontSize:'14px',color:'#3D2E1E',resize:'vertical',outline:'none',lineHeight:'1.8',boxSizing:'border-box'});
+  ta.value=noteInput;
+  const sendBtn=h('button',{});
+  Object.assign(sendBtn.style,{marginTop:'10px',width:'100%',padding:'11px 0',border:'none',borderRadius:'10px',fontSize:'14px',fontWeight:'bold',letterSpacing:'1px'});
+  function updBtn(){const has=state.noteInput.trim().length>0;sendBtn.style.background=has?'linear-gradient(135deg,#8B6914,#A0805A)':'#D4C4B0';sendBtn.style.color=has?'#FFF8EE':'#A09080';sendBtn.style.cursor=has?'pointer':'not-allowed';}
+  ta.addEventListener('input',e=>{state.noteInput=e.target.value;updBtn();});
+  updBtn();sendBtn.textContent='✦ 送出記錄';
+  sendBtn.addEventListener('click',()=>{if(!state.noteInput.trim())return;state.notes.unshift({id:uid(),text:state.noteInput.trim(),time:nowStr()});state.noteInput='';persist();render();});
+  inputBox.appendChild(ta);inputBox.appendChild(sendBtn);div.appendChild(inputBox);
+  if(notes.length>0){
+    div.appendChild(sT('🗂 備忘紀錄（'+notes.length+'）'));
+    notes.forEach(n=>{
+      if(delNote===n.id){
+        const dc=h('div',{className:'del-confirm'});
+        dc.appendChild(h('div',{style:{marginBottom:'8px'}},'確定刪除此備忘？'));
+        const br=h('div',{className:'btn-row'});
+        br.appendChild(h('button',{className:'btn btn-red',onClick:()=>{state.notes=state.notes.filter(x=>x.id!==n.id);state.delNote=null;persist();render();}},'刪除'));
+        br.appendChild(h('button',{className:'btn btn-gray',onClick:()=>{state.delNote=null;render();}},'取消'));
+        dc.appendChild(br);div.appendChild(dc);
+      }else{
+        const nc=h('div',{className:'note-card-filled'});
+        const top=h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'6px'}});
+        top.appendChild(h('span',{className:'note-time'},'🕐 '+n.time));
+        top.appendChild(h('button',{className:'note-del-btn',onClick:()=>{state.delNote=n.id;render();}},'🗑'));
+        nc.appendChild(top);nc.appendChild(h('div',{className:'note-text'},n.text));div.appendChild(nc);
+      }
+    });
+  }else{
+    div.appendChild(h('div',{style:{textAlign:'center',color:'#B0A090',fontSize:'13px',padding:'24px 0'}},'尚無備忘記錄，填寫後點「送出記錄」'));
+  }
+  div.appendChild(sT('💡 花費自律小提示',{marginTop:'20px'}));
+  TIPS.forEach(t=>{const tr=h('div',{className:'tip-row'});tr.appendChild(h('span',{style:{color:'#C8A87A',flexShrink:'0'}},'◆'));tr.appendChild(h('span',{},t));div.appendChild(tr);});
+  return div;
+}
+
+function buildItemRow(item,isFixed){
+  const checked=isFixed?item.paid:item.included;
+  const ir=h('div',{className:'item-row',style:{
+    background:isFixed?(checked?'#EDF5EC':'#FAF5EE'):(checked?'#FAF5EE':'#F5EFE6'),
+    border:isFixed?`1px solid ${checked?'#B8D8B8':'#E0CDB8'}`:`2px solid ${checked?'#C8A87A':'#E0CDB8'}`,
+    opacity:isFixed&&checked?'0.72':'1',
+    boxShadow:!isFixed&&checked?'0 2px 8px rgba(139,105,20,0.12)':'none',
+  }});
+  ir.appendChild(h('button',{className:'check-btn',style:{background:checked?(isFixed?'#6B8F71':'#8B6914'):'#D4C4B0'},onClick:()=>{
+    if(isFixed)state.fixed=state.fixed.map(i=>i.id===item.id?{...i,paid:!i.paid}:i);
+    else state.optional=state.optional.map(i=>i.id===item.id?{...i,included:!i.included}:i);
+    persist();render();
+  }},checked?'✓':''));
+  ir.appendChild(h('div',{className:'item-icon'},item.icon));
+  const body=h('div',{className:'item-body'});
+  body.appendChild(h('div',{className:'item-name',style:{fontWeight:!isFixed&&checked?'bold':'normal',textDecoration:isFixed&&checked?'line-through':'none'}},item.name));
+  body.appendChild(h('span',{className:'cat-badge',style:{background:CAT_COLOR[item.category]||'#A0927A'}},item.category));
+  ir.appendChild(body);
+  ir.appendChild(h('div',{className:'item-amt',style:{color:checked?(isFixed?'#6B8F71':'#8B6914'):(isFixed?'#3D2E1E':'#8B7355')}},fmt(item.amount)));
+  ir.appendChild(h('button',{className:'icon-btn',onClick:e=>{e.stopPropagation();if(isFixed)state.fui={id:item.id,mode:'edit'};else state.oui={id:item.id,mode:'edit'};render();}},'✏️'));
+  ir.appendChild(h('button',{className:'icon-btn',onClick:e=>{e.stopPropagation();if(isFixed)state.fui={id:item.id,mode:'delete'};else state.oui={id:item.id,mode:'delete'};render();}},'🗑'));
+  return ir;
+}
+
+function buildItemForm(initial,onSave,onCancel){
+  let selIcon=initial?.icon??'✨';
+  const box=h('div',{className:'form-box'});
+  box.appendChild(h('div',{style:{fontSize:'12px',color:'#8B6914',fontWeight:'bold',marginBottom:'8px'}},'選擇圖示'));
+  const grid=h('div',{className:'icon-grid'});const iconBtns={};
+  ICONS.forEach(ic=>{
+    const btn=h('button',{className:'icon-opt'+(ic===selIcon?' sel':''),onClick:()=>{selIcon=ic;Object.entries(iconBtns).forEach(([k,b])=>{b.className='icon-opt'+(k===ic?' sel':'');});}},ic);
+    iconBtns[ic]=btn;grid.appendChild(btn);
+  });
+  box.appendChild(grid);
+  const nameInp=h('input',{type:'text',className:'field',placeholder:'項目名稱',value:initial?.name??''});box.appendChild(nameInp);
+  const amtInp=h('input',{type:'number',className:'field',placeholder:'金額（元）',value:initial?.amount?String(initial.amount):''});amtInp.style.marginTop='8px';box.appendChild(amtInp);
+  const catSel=h('select',{className:'field'});catSel.style.marginTop='8px';
+  CATS.forEach(c=>{const o=h('option',{value:c},c);if(c===(initial?.category??'其他'))o.selected=true;catSel.appendChild(o);});
+  box.appendChild(catSel);
+  const br=h('div',{className:'btn-row'});
+  br.appendChild(h('button',{className:'btn btn-gold',onClick:()=>{const name=nameInp.value.trim();const amount=parseInt(amtInp.value);if(!name||!amount||amount<=0)return;onSave({name,amount,category:catSel.value,icon:selIcon});}},'✓ 儲存'));
+  br.appendChild(h('button',{className:'btn btn-gray',onClick:onCancel},'取消'));
+  box.appendChild(br);setTimeout(()=>nameInp.focus(),50);return box;
+}
+
+function buildDelConfirm(name,onConfirm,onCancel){
+  const box=h('div',{className:'del-confirm'});
+  const msg=h('div',{style:{marginBottom:'10px'}});
+  msg.appendChild(document.createTextNode('確定刪除「'));msg.appendChild(h('strong',{},name));msg.appendChild(document.createTextNode('」？'));
+  box.appendChild(msg);
+  const br=h('div',{className:'btn-row'});
+  br.appendChild(h('button',{className:'btn btn-red',onClick:onConfirm},'確認刪除'));
+  br.appendChild(h('button',{className:'btn btn-gray',onClick:onCancel},'取消'));
+  box.appendChild(br);return box;
+}
+
+function sT(text,extraStyle={}){return h('div',{className:'sec-title',style:extraStyle},text);}
+function rw(label,val,color,bold=false){
+  const r=h('div',{className:'row'});
+  r.appendChild(h('span',{style:{color:'#5A4A3A'}},label));
+  r.appendChild(h('span',{style:{fontWeight:bold?'bold':'normal',color:color||'#3D2E1E'}},val));
+  return r;
+}
+
+render();
+</script>
+</body>
+</html>
