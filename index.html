@@ -179,7 +179,8 @@ function buildOverview(fixedTotal,optTotal,paidTotal,committed,remaining,budget)
   const{optional}=state;const div=h('div',{});
   div.appendChild(sT('💰 資金分配一覽'));
   const c1=h('div',{className:'card'});
-  c1.appendChild(rw('必要支出（5月）',fmt(fixedTotal),'#8B7355',true));
+  const currentMonth=new Date().getMonth()+1;
+  c1.appendChild(rw('必要支出（'+currentMonth+'月）',fmt(fixedTotal),'#8B7355',true));
   c1.appendChild(rw('　已付清',fmt(paidTotal),'#6B8F71'));
   c1.appendChild(rw('　待繳納',fmt(fixedTotal-paidTotal),'#9B7E6E'));
   div.appendChild(c1);
@@ -194,6 +195,26 @@ function buildOverview(fixedTotal,optTotal,paidTotal,committed,remaining,budget)
   c3.appendChild(rw('🏦 剩餘未規劃',fmt(remaining),remaining<0?'#CC3333':'#2E7D32',true));
   div.appendChild(c3);
   if(remaining<20000)div.appendChild(h('div',{className:'warn-banner'},'⚠️ 剩餘資金低於 2 萬，建議重新檢視支出。'));
+  // ── 月份警示 ──
+  const MONTHLY=70000;
+  const months=remaining/MONTHLY;
+  const monthsText=months>=0?months.toFixed(1):'0';
+  const mColor=months<3?'#CC3333':months<6?'#B8860B':'#2E7D32';
+  const mBg=months<3?'#FFF0F0':months<6?'#FFFBE6':'#F0F7F0';
+  const mBorder=months<3?'#FFAAAA':months<6?'#F0D080':'#C0DFC0';
+  const mIcon=months<3?'🔴':months<6?'🟡':'🟢';
+  const mBox=h('div',{style:{background:mBg,border:`1px solid ${mBorder}`,borderRadius:'12px',padding:'12px 16px',marginTop:'12px'}});
+  mBox.appendChild(h('div',{style:{fontSize:'12px',color:'#8B7355',marginBottom:'6px'}},'🗓 以每月 NT$ 70,000 日常用度計算'));
+  const mRow=h('div',{style:{display:'flex',alignItems:'baseline',gap:'6px'}});
+  mRow.appendChild(h('span',{style:{fontSize:'13px',color:'#5A4A3A'}},'還可以使用'));
+  mRow.appendChild(h('span',{style:{fontSize:'22px',fontWeight:'bold',color:mColor}},monthsText));
+  mRow.appendChild(h('span',{style:{fontSize:'13px',color:'#5A4A3A'}},'個月'));
+  mRow.appendChild(h('span',{style:{fontSize:'16px',marginLeft:'4px'}},mIcon));
+  mBox.appendChild(mRow);
+  if(months<3)mBox.appendChild(h('div',{style:{fontSize:'12px',color:'#CC3333',marginTop:'6px'}},'⚠️ 資金偏低，建議謹慎支出'));
+  else if(months<6)mBox.appendChild(h('div',{style:{fontSize:'12px',color:'#B8860B',marginTop:'6px'}},'留意支出節奏，持續關注資金狀況'));
+  else mBox.appendChild(h('div',{style:{fontSize:'12px',color:'#2E7D32',marginTop:'6px'}},'資金充裕，保持良好規劃習慣 ✨'));
+  div.appendChild(mBox);
   div.appendChild(sT('📊 支出分類',{marginTop:'20px'}));
   const cats=optional.filter(i=>i.included).reduce((acc,i)=>{acc[i.category]=(acc[i.category]||0)+i.amount;return acc;},{必要:fixedTotal});
   Object.entries(cats).forEach(([cat,amt])=>{
@@ -210,7 +231,8 @@ function buildOverview(fixedTotal,optTotal,paidTotal,committed,remaining,budget)
 
 function buildFixed(fixedTotal){
   const{fixed,fui}=state;const div=h('div',{});
-  div.appendChild(sT('📋 五月必要支出'));
+  const m=new Date().getMonth()+1;
+  div.appendChild(sT('📋 '+m+'月必要支出'));
   div.appendChild(h('div',{style:{fontSize:'12px',color:'#A09080',marginBottom:'12px'}},'點 ✓ 已付清 ／ ✏️ 修改 ／ 🗑 刪除'));
   fixed.forEach(item=>{
     const editing=fui?.id===item.id&&fui?.mode==='edit';
