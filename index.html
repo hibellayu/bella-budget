@@ -27,8 +27,8 @@
   .prog-info{display:flex;justify-content:space-between;font-size:10px;opacity:.7;margin-bottom:5px;}
   .prog-bg{height:7px;background:rgba(255,255,255,0.2);border-radius:99px;}
   .prog-fill{height:100%;border-radius:99px;transition:width .5s ease;}
-  .tabs{display:flex;background:#EDE0D0;border-bottom:2px solid #D4C4B0;position:sticky;top:0;z-index:10;}
-  .tab-btn{flex:1;padding:12px 4px;border:none;background:transparent;color:#8B7355;font-size:12px;font-family:inherit;border-bottom:2px solid transparent;transition:all .15s;}
+  .tabs{display:flex;background:#EDE0D0;border-bottom:2px solid #D4C4B0;position:sticky;top:0;z-index:10;overflow-x:auto;}
+  .tab-btn{flex:1;min-width:56px;padding:12px 4px;border:none;background:transparent;color:#8B7355;font-size:11px;font-family:inherit;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;}
   .tab-btn.active{background:#F5EFE6;color:#8B6914;font-weight:bold;border-bottom:2px solid #8B6914;}
   .content{padding:16px 16px 0;}
   .sec-title{font-size:13px;font-weight:bold;color:#8B6914;letter-spacing:1px;margin-bottom:10px;margin-top:4px;}
@@ -61,19 +61,23 @@
   .note-text{font-size:14px;line-height:1.8;color:#FFF3E0;white-space:pre-wrap;word-break:break-word;margin-top:8px;}
   .note-del-btn{background:none;border:none;font-size:14px;color:#E8A090;padding:0 2px;opacity:.8;}
   .tip-row{background:#FAF5EE;border:1px solid #E0CDB8;border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:13px;display:flex;gap:8px;}
-  .budget-edit-input{width:100%;background:rgba(255,255,255,0.3);border:1px solid rgba(255,255,255,0.5);border-radius:6px;padding:4px 6px;color:#FFF8EE;font-size:13px;outline:none;}
-  .budget-mini-btn{flex:1;background:rgba(255,255,255,0.25);border:none;border-radius:6px;color:#FFF8EE;font-size:11px;padding:4px 0;}
   .bar-bg{height:6px;background:#E8D5C0;border-radius:99px;margin-top:4px;}
   .bar-fill{height:100%;border-radius:99px;}
   .warn-banner{background:#FFF0F0;border:1px solid #FFAAAA;border-radius:12px;padding:12px 16px;font-size:13px;color:#CC2222;margin-top:12px;}
+  .income-card{background:#F0F7F0;border:1px solid #B8D8B8;border-radius:14px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;}
+  .income-source{font-size:14px;font-weight:bold;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .income-date{font-size:11px;color:#8B7355;margin-top:2px;}
+  .income-amt{font-weight:bold;font-size:15px;color:#2E7D32;flex-shrink:0;}
+  .ver{text-align:center;font-size:11px;color:#B0A090;padding:20px 0 8px;}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
-const LS_KEY='bella_budget_v2';
+const LS_KEY='bella_budget_v11';
 function loadData(){try{return JSON.parse(localStorage.getItem(LS_KEY))||{};}catch(e){return{};}}
 function saveData(d){try{localStorage.setItem(LS_KEY,JSON.stringify(d));}catch(e){}}
+
 const DEF_FIXED=[
   {id:'f1',name:'國泰世華信用卡費',amount:20000,category:'必要',icon:'💳',paid:false},
   {id:'f2',name:'中信卡費',amount:20000,category:'必要',icon:'💳',paid:false},
@@ -92,8 +96,10 @@ const CAT_COLOR={必要:'#8B7355',投資:'#6B8F71',健康:'#9B7E6E',興趣:'#7B8
 const ICONS=['💳','🚗','📺','📈','🏥','💪','🎾','🛍️','✈️','🍽️','📚','💄','🏠','💊','✨','🎓','🖥️','🎯'];
 const CATS=['必要','投資','健康','興趣','其他'];
 const TIPS=['先繳清固定費用，再考慮額外支出','投資與健康支出 > 娛樂消費','超過 1 萬的消費，等 48 小時再決定','每週回顧一次預算，避免不自覺超支','轉職期間，現金流 = 安全感'];
+
 function fmt(n){return'NT$ '+Number(n).toLocaleString('zh-TW');}
 function uid(){return'i'+Date.now()+Math.random().toString(36).slice(2,5);}
+function todayStr(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function nowStr(){const d=new Date();return`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
 function h(tag,attrs,...children){
   const el=document.createElement(tag);
@@ -106,27 +112,35 @@ function h(tag,attrs,...children){
   children.flat().forEach(c=>{if(c==null||c===false)return;el.appendChild(typeof c==='string'?document.createTextNode(c):c);});
   return el;
 }
+
 const stored=loadData();
 let state={
-  budget:stored.budget??440000,
-  fixed:stored.fixed??JSON.parse(JSON.stringify(DEF_FIXED)),
-  optional:stored.optional??JSON.parse(JSON.stringify(DEF_OPT)),
-  notes:stored.notes??[],
-  tab:'overview',editingBudget:false,budgetInput:'',noteInput:'',fui:null,oui:null,delNote:null,
+  incomes: stored.incomes ?? [{id:'i1',source:'資遣費',amount:440000,date:'2026-04-30'}],
+  fixed:   stored.fixed   ?? JSON.parse(JSON.stringify(DEF_FIXED)),
+  optional:stored.optional?? JSON.parse(JSON.stringify(DEF_OPT)),
+  notes:   stored.notes   ?? [],
+  tab:'overview',
+  noteInput:'', fui:null, oui:null, delNote:null,
+  showIncomeForm:false, incomeInput:{source:'',amount:'',date:todayStr()},
+  delIncome:null,
 };
-function persist(){saveData({budget:state.budget,fixed:state.fixed,optional:state.optional,notes:state.notes});}
+
+function persist(){saveData({incomes:state.incomes,fixed:state.fixed,optional:state.optional,notes:state.notes});}
 function render(){const app=document.getElementById('app');app.innerHTML='';app.appendChild(buildApp());}
 
+// ── buildApp ──────────────────────────────────────────────────────────────────
 function buildApp(){
-  const{budget,fixed,optional,tab}=state;
+  const{incomes,fixed,optional,tab}=state;
+  const budget=incomes.reduce((s,i)=>s+i.amount,0);
   const fixedTotal=fixed.reduce((s,i)=>s+i.amount,0);
   const optTotal=optional.filter(i=>i.included).reduce((s,i)=>s+i.amount,0);
   const paidTotal=fixed.filter(i=>i.paid).reduce((s,i)=>s+i.amount,0);
   const committed=fixedTotal+optTotal;
   const remaining=budget-committed;
-  const pct=Math.min((committed/budget)*100,100);
+  const pct=Math.min(budget>0?(committed/budget)*100:0,100);
   const danger=remaining<20000,warn=remaining<50000;
   const wrap=h('div',{});
+
   // Header
   const hdr=h('div',{className:'header'});
   hdr.appendChild(h('div',{className:'circle',style:{top:'-20px',right:'-20px',width:'120px',height:'120px'}}));
@@ -134,53 +148,54 @@ function buildApp(){
   hdr.appendChild(h('div',{className:'sub'},"BELLA'S FUND"));
   hdr.appendChild(h('div',{className:'title'},'貝拉的宇宙訂單'));
   hdr.appendChild(h('div',{className:'subtitle'},'2026.5月 · 重啟計劃'));
-  // Budget cards
+
   const cards=h('div',{className:'cards'});
+  // 總資金（自動加總，不可手動編輯）
   const bc=h('div',{className:'hcard'});
   bc.appendChild(h('div',{className:'hlabel'},'總資金'));
-  if(state.editingBudget){
-    const inp=h('input',{type:'number',className:'budget-edit-input',value:state.budgetInput});
-    inp.addEventListener('input',e=>{state.budgetInput=e.target.value;});
-    bc.appendChild(inp);
-    const br=h('div',{style:{display:'flex',gap:'4px',marginTop:'6px'}});
-    br.appendChild(h('button',{className:'budget-mini-btn',onClick:()=>{const v=parseInt(state.budgetInput);if(v>0){state.budget=v;persist();}state.editingBudget=false;render();}},'✓'));
-    br.appendChild(h('button',{className:'budget-mini-btn',style:{background:'rgba(255,255,255,0.12)'},onClick:()=>{state.editingBudget=false;render();}},'✕'));
-    bc.appendChild(br);setTimeout(()=>inp.focus(),50);
-  }else{
-    const vr=h('div',{style:{display:'flex',alignItems:'center',gap:'6px'}});
-    vr.appendChild(h('div',{className:'hval'},fmt(budget)));
-    vr.appendChild(h('button',{style:{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'5px',color:'#FFF8EE',fontSize:'11px',padding:'2px 6px'},onClick:()=>{state.editingBudget=true;state.budgetInput=String(budget);render();}},'✏️'));
-    bc.appendChild(vr);
-  }
+  bc.appendChild(h('div',{className:'hval'},fmt(budget)));
   cards.appendChild(bc);
-  const bc2=h('div',{className:'hcard'});bc2.appendChild(h('div',{className:'hlabel'},'已規劃'));bc2.appendChild(h('div',{className:'hval'},fmt(committed)));cards.appendChild(bc2);
-  const bc3=h('div',{className:'hcard'+(danger?' danger':warn?' warn':'')});bc3.appendChild(h('div',{className:'hlabel'},'剩餘'));bc3.appendChild(h('div',{className:'hval'},fmt(remaining)));cards.appendChild(bc3);
+  const bc2=h('div',{className:'hcard'});
+  bc2.appendChild(h('div',{className:'hlabel'},'已規劃'));
+  bc2.appendChild(h('div',{className:'hval'},fmt(committed)));
+  cards.appendChild(bc2);
+  const bc3=h('div',{className:'hcard'+(danger?' danger':warn?' warn':'')});
+  bc3.appendChild(h('div',{className:'hlabel'},'剩餘'));
+  bc3.appendChild(h('div',{className:'hval'},fmt(remaining)));
+  cards.appendChild(bc3);
   hdr.appendChild(cards);
-  // Progress
+
   const pw=h('div',{className:'prog-wrap'});
-  const pi=h('div',{className:'prog-info'});pi.appendChild(h('span',{},'支出比例'));pi.appendChild(h('span',{},pct.toFixed(1)+'%'));pw.appendChild(pi);
-  const pbg=h('div',{className:'prog-bg'});pbg.appendChild(h('div',{className:'prog-fill',style:{width:pct+'%',background:danger?'#FF6B6B':pct>70?'#F0C060':'#A8D5A2'}}));pw.appendChild(pbg);
-  hdr.appendChild(pw);wrap.appendChild(hdr);
+  const pi=h('div',{className:'prog-info'});
+  pi.appendChild(h('span',{},'支出比例'));pi.appendChild(h('span',{},pct.toFixed(1)+'%'));pw.appendChild(pi);
+  const pbg=h('div',{className:'prog-bg'});
+  pbg.appendChild(h('div',{className:'prog-fill',style:{width:pct+'%',background:danger?'#FF6B6B':pct>70?'#F0C060':'#A8D5A2'}}));
+  pw.appendChild(pbg);hdr.appendChild(pw);wrap.appendChild(hdr);
+
   // Tabs
   const tabsDiv=h('div',{className:'tabs'});
-  [['overview','總覽'],['fixed','必要支出'],['optional','額外規劃'],['note','備忘']].forEach(([k,l])=>{
+  [['overview','總覽'],['income','收入'],['fixed','必要支出'],['optional','額外規劃'],['note','備忘']].forEach(([k,l])=>{
     tabsDiv.appendChild(h('button',{className:'tab-btn'+(tab===k?' active':''),onClick:()=>{state.tab=k;state.fui=null;state.oui=null;render();}},l));
   });
   wrap.appendChild(tabsDiv);
+
   const ct=h('div',{className:'content'});
-  if(tab==='overview')ct.appendChild(buildOverview(fixedTotal,optTotal,paidTotal,committed,remaining,budget));
-  if(tab==='fixed')ct.appendChild(buildFixed(fixedTotal));
-  if(tab==='optional')ct.appendChild(buildOptional(optTotal,remaining));
-  if(tab==='note')ct.appendChild(buildNote());
+  if(tab==='overview') ct.appendChild(buildOverview(fixedTotal,optTotal,paidTotal,committed,remaining,budget));
+  if(tab==='income')   ct.appendChild(buildIncome(budget));
+  if(tab==='fixed')    ct.appendChild(buildFixed(fixedTotal));
+  if(tab==='optional') ct.appendChild(buildOptional(optTotal,remaining));
+  if(tab==='note')     ct.appendChild(buildNote());
+  ct.appendChild(h('div',{className:'ver'},'v1.1'));
   wrap.appendChild(ct);return wrap;
 }
 
+// ── Overview ──────────────────────────────────────────────────────────────────
 function buildOverview(fixedTotal,optTotal,paidTotal,committed,remaining,budget){
   const{optional}=state;const div=h('div',{});
   div.appendChild(sT('💰 資金分配一覽'));
   const c1=h('div',{className:'card'});
-  const currentMonth=new Date().getMonth()+1;
-  c1.appendChild(rw('必要支出（'+currentMonth+'月）',fmt(fixedTotal),'#8B7355',true));
+  const cm=new Date().getMonth()+1;
+  c1.appendChild(rw('必要支出（'+cm+'月）',fmt(fixedTotal),'#8B7355',true));
   c1.appendChild(rw('　已付清',fmt(paidTotal),'#6B8F71'));
   c1.appendChild(rw('　待繳納',fmt(fixedTotal-paidTotal),'#9B7E6E'));
   div.appendChild(c1);
@@ -195,10 +210,10 @@ function buildOverview(fixedTotal,optTotal,paidTotal,committed,remaining,budget)
   c3.appendChild(rw('🏦 剩餘未規劃',fmt(remaining),remaining<0?'#CC3333':'#2E7D32',true));
   div.appendChild(c3);
   if(remaining<20000)div.appendChild(h('div',{className:'warn-banner'},'⚠️ 剩餘資金低於 2 萬，建議重新檢視支出。'));
-  // ── 月份警示 ──
+
+  // 月份警示
   const MONTHLY=70000;
   const months=remaining/MONTHLY;
-  const monthsText=months>=0?months.toFixed(1):'0';
   const mColor=months<3?'#CC3333':months<6?'#B8860B':'#2E7D32';
   const mBg=months<3?'#FFF0F0':months<6?'#FFFBE6':'#F0F7F0';
   const mBorder=months<3?'#FFAAAA':months<6?'#F0D080':'#C0DFC0';
@@ -207,7 +222,7 @@ function buildOverview(fixedTotal,optTotal,paidTotal,committed,remaining,budget)
   mBox.appendChild(h('div',{style:{fontSize:'12px',color:'#8B7355',marginBottom:'6px'}},'🗓 以每月 NT$ 70,000 日常用度計算'));
   const mRow=h('div',{style:{display:'flex',alignItems:'baseline',gap:'6px'}});
   mRow.appendChild(h('span',{style:{fontSize:'13px',color:'#5A4A3A'}},'還可以使用'));
-  mRow.appendChild(h('span',{style:{fontSize:'22px',fontWeight:'bold',color:mColor}},monthsText));
+  mRow.appendChild(h('span',{style:{fontSize:'22px',fontWeight:'bold',color:mColor}},(months>=0?months.toFixed(1):'0')));
   mRow.appendChild(h('span',{style:{fontSize:'13px',color:'#5A4A3A'}},'個月'));
   mRow.appendChild(h('span',{style:{fontSize:'16px',marginLeft:'4px'}},mIcon));
   mBox.appendChild(mRow);
@@ -215,6 +230,7 @@ function buildOverview(fixedTotal,optTotal,paidTotal,committed,remaining,budget)
   else if(months<6)mBox.appendChild(h('div',{style:{fontSize:'12px',color:'#B8860B',marginTop:'6px'}},'留意支出節奏，持續關注資金狀況'));
   else mBox.appendChild(h('div',{style:{fontSize:'12px',color:'#2E7D32',marginTop:'6px'}},'資金充裕，保持良好規劃習慣 ✨'));
   div.appendChild(mBox);
+
   div.appendChild(sT('📊 支出分類',{marginTop:'20px'}));
   const cats=optional.filter(i=>i.included).reduce((acc,i)=>{acc[i.category]=(acc[i.category]||0)+i.amount;return acc;},{必要:fixedTotal});
   Object.entries(cats).forEach(([cat,amt])=>{
@@ -223,12 +239,85 @@ function buildOverview(fixedTotal,optTotal,paidTotal,committed,remaining,budget)
     bl.appendChild(h('span',{style:{color:CAT_COLOR[cat]||'#8B7355'}},'■ '+cat));
     bl.appendChild(h('span',{style:{fontWeight:'bold'}},fmt(amt)));
     bw.appendChild(bl);
-    const bg=h('div',{className:'bar-bg'});bg.appendChild(h('div',{className:'bar-fill',style:{width:Math.min((amt/budget)*100,100)+'%',background:CAT_COLOR[cat]||'#8B7355'}}));
+    const bg=h('div',{className:'bar-bg'});
+    bg.appendChild(h('div',{className:'bar-fill',style:{width:Math.min((amt/budget)*100,100)+'%',background:CAT_COLOR[cat]||'#8B7355'}}));
     bw.appendChild(bg);div.appendChild(bw);
   });
   return div;
 }
 
+// ── Income ────────────────────────────────────────────────────────────────────
+function buildIncome(budget){
+  const{incomes,showIncomeForm,incomeInput,delIncome}=state;
+  const div=h('div',{});
+  div.appendChild(sT('💵 收入紀錄'));
+  div.appendChild(h('div',{style:{fontSize:'12px',color:'#A09080',marginBottom:'12px'}},'所有收入加總即為總資金'));
+
+  // 收入列表
+  incomes.forEach(item=>{
+    if(delIncome===item.id){
+      const dc=h('div',{className:'del-confirm'});
+      dc.appendChild(h('div',{style:{marginBottom:'8px'}},'確定刪除「'+item.source+'」？'));
+      const br=h('div',{className:'btn-row'});
+      br.appendChild(h('button',{className:'btn btn-red',onClick:()=>{state.incomes=state.incomes.filter(i=>i.id!==item.id);state.delIncome=null;persist();render();}},'確認刪除'));
+      br.appendChild(h('button',{className:'btn btn-gray',onClick:()=>{state.delIncome=null;render();}},'取消'));
+      dc.appendChild(br);div.appendChild(dc);
+    }else{
+      const ic=h('div',{className:'income-card'});
+      ic.appendChild(h('div',{style:{fontSize:'22px'}},'💰'));
+      const body=h('div',{style:{flex:1,minWidth:0}});
+      body.appendChild(h('div',{className:'income-source'},item.source));
+      body.appendChild(h('div',{className:'income-date'},item.date));
+      ic.appendChild(body);
+      ic.appendChild(h('div',{className:'income-amt'},fmt(item.amount)));
+      ic.appendChild(h('button',{className:'icon-btn',onClick:()=>{state.delIncome=item.id;render();}},'🗑'));
+      div.appendChild(ic);
+    }
+  });
+
+  // 新增表單
+  if(showIncomeForm){
+    const box=h('div',{className:'form-box'});
+    box.appendChild(h('div',{style:{fontSize:'12px',color:'#8B6914',fontWeight:'bold',marginBottom:'10px'}},'新增收入'));
+    const srcInp=h('input',{type:'text',className:'field',placeholder:'收入來源（例：資遣費、薪水、獎金）',value:incomeInput.source});
+    srcInp.addEventListener('input',e=>{state.incomeInput={...state.incomeInput,source:e.target.value};});
+    box.appendChild(srcInp);
+    const amtInp=h('input',{type:'number',className:'field',placeholder:'金額（元）',value:incomeInput.amount});
+    amtInp.style.marginTop='8px';
+    amtInp.addEventListener('input',e=>{state.incomeInput={...state.incomeInput,amount:e.target.value};});
+    box.appendChild(amtInp);
+    const dateInp=h('input',{type:'date',className:'field',value:incomeInput.date});
+    dateInp.style.marginTop='8px';
+    dateInp.addEventListener('input',e=>{state.incomeInput={...state.incomeInput,date:e.target.value};});
+    box.appendChild(dateInp);
+    const br=h('div',{className:'btn-row'});
+    br.appendChild(h('button',{className:'btn btn-gold',onClick:()=>{
+      const src=state.incomeInput.source.trim();
+      const amt=parseInt(state.incomeInput.amount);
+      const dt=state.incomeInput.date;
+      if(!src||!amt||amt<=0)return;
+      state.incomes.push({id:uid(),source:src,amount:amt,date:dt});
+      state.showIncomeForm=false;
+      state.incomeInput={source:'',amount:'',date:todayStr()};
+      persist();render();
+    }},'✓ 儲存'));
+    br.appendChild(h('button',{className:'btn btn-gray',onClick:()=>{state.showIncomeForm=false;render();}},'取消'));
+    box.appendChild(br);
+    setTimeout(()=>srcInp.focus(),50);
+    div.appendChild(box);
+  }else{
+    div.appendChild(h('button',{className:'add-btn',onClick:()=>{state.showIncomeForm=true;render();}},'＋ 新增收入'));
+  }
+
+  // 合計
+  const sb=h('div',{className:'sum-bar',style:{display:'flex',justifyContent:'space-between'}});
+  sb.appendChild(h('span',{style:{fontWeight:'bold'}},'總資金合計'));
+  sb.appendChild(h('span',{style:{fontWeight:'bold',fontSize:'16px',color:'#2E7D32'}},fmt(budget)));
+  div.appendChild(sb);
+  return div;
+}
+
+// ── Fixed ─────────────────────────────────────────────────────────────────────
 function buildFixed(fixedTotal){
   const{fixed,fui}=state;const div=h('div',{});
   const m=new Date().getMonth()+1;
@@ -248,6 +337,7 @@ function buildFixed(fixedTotal){
   div.appendChild(sb);return div;
 }
 
+// ── Optional ──────────────────────────────────────────────────────────────────
 function buildOptional(optTotal,remaining){
   const{optional,oui}=state;const div=h('div',{});
   div.appendChild(sT('✨ 額外規劃支出'));
@@ -272,6 +362,7 @@ function buildOptional(optTotal,remaining){
   div.appendChild(sb);return div;
 }
 
+// ── Note ──────────────────────────────────────────────────────────────────────
 function buildNote(){
   const{notes,noteInput,delNote}=state;const div=h('div',{});
   div.appendChild(sT('📝 新增備忘'));
@@ -312,6 +403,7 @@ function buildNote(){
   return div;
 }
 
+// ── Item Row ──────────────────────────────────────────────────────────────────
 function buildItemRow(item,isFixed){
   const checked=isFixed?item.paid:item.included;
   const ir=h('div',{className:'item-row',style:{
