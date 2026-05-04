@@ -165,6 +165,7 @@ function gistPayload(){
   return JSON.stringify({
     incomes:state.incomes,fixed:state.fixed,
     optional:state.optional,notes:state.notes,
+    monthlyBudget:state.config.monthlyBudget,
     updatedAt:new Date().toISOString(),
   },null,2);
 }
@@ -229,6 +230,7 @@ async function handleConnect(){
       state.fixed=remote.fixed??state.fixed;
       state.optional=remote.optional??state.optional;
       state.notes=remote.notes??state.notes;
+      if(remote.monthlyBudget)state.config={...state.config,monthlyBudget:remote.monthlyBudget};
     }else{
       // 首次：把本地資料推上去
       await pushGist();
@@ -250,6 +252,7 @@ async function handlePull(){
       state.fixed=remote.fixed??state.fixed;
       state.optional=remote.optional??state.optional;
       state.notes=remote.notes??state.notes;
+      if(remote.monthlyBudget)state.config={...state.config,monthlyBudget:remote.monthlyBudget};
       persist();
       state.syncStatus='ok';state.syncMsg='已同步';
     }else{
